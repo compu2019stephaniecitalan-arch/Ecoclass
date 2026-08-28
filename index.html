@@ -1,12 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
 <title>EcoClass ♻️ | Clasificador de Residuos</title>
 
+<!-- =========================
+     TENSORFLOW + TEACHABLE MACHINE
+========================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+
 <style>
+
+/* =========================
+   DISEÑO GENERAL
+========================= */
+
 * {
     box-sizing: border-box;
 }
@@ -14,822 +31,2037 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
-    color: #1b4332;
+
+    background:
+        linear-gradient(135deg,
+        #e8f5e9,
+        #f1f8e9);
+
+    color: #173b2a;
 }
 
 header {
     background: #2e7d32;
     color: white;
+
     text-align: center;
-    padding: 25px 15px;
+
+    padding: 30px 15px;
 }
 
 header h1 {
     margin: 0;
-    font-size: 36px;
+
+    font-size: 42px;
 }
 
 header p {
-    margin: 8px 0 0;
+    margin: 8px 0;
+
     font-size: 17px;
 }
 
 .container {
     width: 92%;
-    max-width: 900px;
+    max-width: 1000px;
+
     margin: 25px auto;
 }
 
 .card {
     background: white;
+
     border-radius: 20px;
-    padding: 22px;
-    margin-bottom: 20px;
-    box-shadow: 0 5px 18px rgba(0,0,0,.10);
+
+    padding: 25px;
+
+    margin-bottom: 22px;
+
+    box-shadow:
+        0 6px 20px rgba(0,0,0,0.10);
 }
 
 h2 {
     color: #2e7d32;
 }
 
+h3 {
+    color: #1b5e20;
+}
+
+
+/* =========================
+   BOTONES
+========================= */
+
 button {
     border: none;
+
     border-radius: 12px;
-    padding: 14px 18px;
+
+    padding: 14px 20px;
+
     margin: 6px;
+
     font-size: 16px;
+
     cursor: pointer;
+
     background: #43a047;
+
     color: white;
+
+    transition: 0.2s;
 }
 
 button:hover {
-    background: #2e7d32;
-}
-
-input[type="text"] {
-    width: 100%;
-    padding: 14px;
-    border: 2px solid #c8e6c9;
-    border-radius: 12px;
-    font-size: 16px;
-    margin-bottom: 10px;
-}
-
-video {
-    width: 100%;
-    max-width: 600px;
-    border-radius: 18px;
-    background: #111;
-    display: none;
-    margin: 15px auto;
-}
-
-canvas {
-    display: none;
-}
-
-#preview {
-    max-width: 100%;
-    border-radius: 18px;
-    display: none;
-    margin: 15px auto;
-}
-
-#resultado {
-    display: none;
-    background: #e8f5e9;
-    border-left: 6px solid #2e7d32;
-    padding: 18px;
-    border-radius: 12px;
-    margin-top: 15px;
-}
-
-#cargando {
-    display: none;
-    text-align: center;
-    padding: 15px;
-    font-weight: bold;
-}
-
-.categorias {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-}
-
-.categoria {
-    padding: 18px;
-    border-radius: 15px;
-    background: #f1f8e9;
-    text-align: center;
-}
-
-.categoria strong {
-    display: block;
-    font-size: 18px;
-    margin-bottom: 8px;
-}
-
-.historial-item {
-    padding: 12px;
-    margin: 8px 0;
-    background: #f5f5f5;
-    border-radius: 10px;
-}
-
-footer {
-    text-align: center;
-    padding: 25px;
     background: #1b5e20;
-    color: white;
-    margin-top: 30px;
+
+    transform: scale(1.02);
 }
 
-.pequeno {
-    font-size: 14px;
-    color: #555;
-}
-
-@media(max-width:600px) {
-    header h1 {
-        font-size: 28px;
-    }
-
-    button {
-        width: 100%;
-        margin: 5px 0;
-    }
-}
-</style>
-</head>
-
-<body>
-
-<header>
-    <h1>♻️ EcoClass</h1>
-    <p>Clasificador inteligente de residuos</p>
-    <p>Proyecto de 2.º Básico · Feria Científica</p>
-</header>
-
-<div class="container">
-
-    <div class="card">
-        <h2>🌱 ¿Qué es EcoClass?</h2>
-
-        <p>
-            EcoClass es un proyecto de 2.º básico para una Feria Científica
-            que utiliza tecnología para ayudar a identificar y clasificar
-            diferentes tipos de residuos.
-        </p>
-
-        <p>
-            Puedes tomar una fotografía, subir una imagen o escribir el nombre
-            de un residuo para conocer cómo debe clasificarse.
-        </p>
-    </div>
-
-    <div class="card">
-
-        <h2>📷 Reconocer un residuo</h2>
-
-        <button onclick="iniciarCamara()">
-            📷 Usar cámara
-        </button>
-
-        <button onclick="detenerCamara()">
-            ⛔ Detener cámara
-        </button>
-
-        <video id="video" autoplay playsinline></video>
-
-        <button id="tomarFoto" onclick="tomarFoto()" style="display:none;">
-            📸 Tomar fotografía
-        </button>
-
-        <canvas id="canvas"></canvas>
-
-        <img id="preview">
-
-        <br>
-
-        <input
-            type="file"
-            id="archivo"
-            accept="image/*"
-            onchange="mostrarImagen(event)"
-        >
-
-        <button onclick="analizarImagen()">
-            🤖 Analizar residuo
-        </button>
-
-        <div id="cargando">
-            🔄 Analizando imagen...
-        </div>
-
-        <div id="resultado"></div>
-
-    </div>
-
-    <div class="card">
-
-        <h2>🔎 Buscar un residuo</h2>
-
-        <input
-            type="text"
-            id="busqueda"
-            placeholder="Ejemplo: cáscara de manzana"
-        >
-
-        <button onclick="buscarResiduo()">
-            🔍 Buscar
-        </button>
-
-        <div id="resultadoBusqueda"></div>
-
-    </div>
-
-    <div class="card">
-
-        <h2>♻️ Categorías</h2>
-
-        <div class="categorias">
-
-            <div class="categoria">
-                <strong>🍎 Orgánicos</strong>
-                Cáscaras de frutas, verduras, restos de comida,
-                café, hojas y residuos de jardín.
-            </div>
-
-            <div class="categoria">
-                <strong>📄 Papel y cartón</strong>
-                Hojas, periódicos, revistas, cajas y cartón limpio.
-            </div>
-
-            <div class="categoria">
-                <strong>🥤 Plásticos</strong>
-                Botellas, recipientes y algunos envases plásticos.
-            </div>
-
-            <div class="categoria">
-                <strong>🍾 Vidrio</strong>
-                Botellas, frascos y recipientes de vidrio.
-            </div>
-
-            <div class="categoria">
-                <strong>🥫 Metales</strong>
-                Latas de aluminio, latas de alimentos y otros metales.
-            </div>
-
-            <div class="categoria">
-                <strong>💻 Electrónicos</strong>
-                Celulares, cables, cargadores, teclados y aparatos electrónicos.
-            </div>
-
-            <div class="categoria">
-                <strong>⚠️ Especiales</strong>
-                Pilas, baterías, focos, medicamentos y productos químicos.
-            </div>
-
-            <div class="categoria">
-                <strong>🚫 No reciclables</strong>
-                Residuos contaminados y materiales que no pueden
-                recuperarse mediante reciclaje convencional.
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h2>📚 Ejemplos de residuos</h2>
-
-        <p><strong>🍎 Cáscara de manzana:</strong> Orgánico.</p>
-
-        <p><strong>🍌 Cáscara de banano:</strong> Orgánico.</p>
-
-        <p><strong>🍕 Restos de pizza:</strong> Orgánico, aunque debe considerarse
-        el sistema de compostaje disponible.</p>
-
-        <p><strong>🥤 Botella plástica:</strong> Plástico reciclable si está
-        limpia y el sistema local la acepta.</p>
-
-        <p><strong>🍾 Botella de vidrio:</strong> Vidrio reciclable.</p>
-
-        <p><strong>🥫 Lata de aluminio:</strong> Metal reciclable.</p>
-
-        <p><strong>💡 Foco:</strong> Residuo especial. No debe colocarse
-        automáticamente con el vidrio común.</p>
-
-        <p><strong>🔋 Pila:</strong> Residuo especial/peligroso.
-        Debe llevarse a un punto de recolección adecuado.</p>
-
-        <p><strong>🔌 Cargador:</strong> Residuo electrónico.</p>
-
-        <p><strong>🪛 Destornillador:</strong> Objeto metálico que puede
-        requerir reutilización o un punto de recolección de metales
-        según las instalaciones disponibles.</p>
-
-    </div>
-
-    <div class="card">
-
-        <h2>💾 Historial</h2>
-
-        <div id="historial"></div>
-
-        <button onclick="borrarHistorial()">
-            🗑️ Borrar historial
-        </button>
-
-    </div>
-
-    <div class="card">
-
-        <h2>🔬 Sobre el proyecto</h2>
-
-        <p>
-            <strong>EcoClass</strong> fue creado como proyecto de
-            <strong>2.º Básico para una Feria Científica</strong>.
-        </p>
-
-        <p>
-            Su objetivo es demostrar cómo la tecnología y la inteligencia
-            artificial pueden utilizarse como herramienta educativa para
-            aprender sobre la clasificación de residuos y promover el cuidado
-            del medio ambiente.
-        </p>
-
-        <h3>🌎 Objetivos</h3>
-
-        <ul>
-            <li>Aprender a separar correctamente los residuos.</li>
-            <li>Promover el reciclaje.</li>
-            <li>Utilizar tecnología con un propósito educativo.</li>
-            <li>Reducir errores al clasificar residuos.</li>
-            <li>Crear conciencia sobre el cuidado del medio ambiente.</li>
-        </ul>
-
-    </div>
-
-</div>
-
-<footer>
-    EcoClass ♻️ · Proyecto de 2.º Básico · Feria Científica
-</footer>
-
-<script>
-
-let stream = null;
-let imagenBase64 = null;
 
 /* =========================
    CÁMARA
 ========================= */
 
-async function iniciarCamara() {
+#camara {
+    display: flex;
 
-    try {
+    justify-content: center;
 
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: {
-                    ideal: "environment"
-                }
-            },
-            audio: false
-        });
+    align-items: center;
 
-        const video = document.getElementById("video");
-
-        video.srcObject = stream;
-        video.style.display = "block";
-
-        document.getElementById("tomarFoto").style.display = "inline-block";
-
-    } catch(error) {
-
-        alert(
-            "No se pudo acceder a la cámara. " +
-            "Comprueba que hayas permitido el acceso."
-        );
-
-        console.error(error);
-    }
+    margin: 20px auto;
 }
 
-function detenerCamara() {
+#camara canvas {
+    width: 100% !important;
 
-    if(stream) {
+    max-width: 500px !important;
 
-        stream.getTracks().forEach(track => track.stop());
+    height: auto !important;
 
-        stream = null;
-    }
+    border-radius: 20px;
 
-    document.getElementById("video").style.display = "none";
-    document.getElementById("tomarFoto").style.display = "none";
+    box-shadow:
+        0 5px 15px rgba(0,0,0,0.2);
 }
 
-function tomarFoto() {
-
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const preview = document.getElementById("preview");
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const contexto = canvas.getContext("2d");
-
-    contexto.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    imagenBase64 = canvas.toDataURL("image/jpeg", 0.85);
-
-    preview.src = imagenBase64;
-    preview.style.display = "block";
-
-    detenerCamara();
-}
 
 /* =========================
-   SUBIR IMAGEN
+   RESULTADO
 ========================= */
 
-function mostrarImagen(event) {
+#resultado {
+    display: none;
 
-    const archivo = event.target.files[0];
+    margin-top: 20px;
 
-    if(!archivo) return;
+    padding: 22px;
 
-    const lector = new FileReader();
+    border-radius: 18px;
 
-    lector.onload = function(e) {
+    background: #e8f5e9;
 
-        imagenBase64 = e.target.result;
-
-        const preview = document.getElementById("preview");
-
-        preview.src = imagenBase64;
-        preview.style.display = "block";
-    };
-
-    lector.readAsDataURL(archivo);
+    border-left: 7px solid #2e7d32;
 }
 
-/* =========================
-   ANALIZAR IMAGEN
-========================= */
+.resultado-icono {
+    font-size: 55px;
 
-async function analizarImagen() {
-
-    if(!imagenBase64) {
-
-        alert("Primero toma una foto o selecciona una imagen.");
-        return;
-    }
-
-    document.getElementById("cargando").style.display = "block";
-
-    document.getElementById("resultado").style.display = "none";
-
-    try {
-
-        const respuesta = await fetch("/api/analizar", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                image: imagenBase64
-            })
-
-        });
-
-        const datos = await respuesta.json();
-
-        if(!respuesta.ok) {
-            throw new Error(datos.error || "Error al analizar.");
-        }
-
-        mostrarResultado(datos);
-
-        guardarHistorial(
-            datos.nombre || "Residuo",
-            datos.categoria || "Sin clasificar"
-        );
-
-    } catch(error) {
-
-        console.error(error);
-
-        alert(
-            "No se pudo analizar la imagen. " +
-            "Revisa la conexión o la configuración de la API."
-        );
-
-    } finally {
-
-        document.getElementById("cargando").style.display = "none";
-    }
+    text-align: center;
 }
 
-/* =========================
-   MOSTRAR RESULTADO
-========================= */
+.confianza {
+    background: white;
 
-function mostrarResultado(datos) {
+    border-radius: 10px;
 
-    const resultado = document.getElementById("resultado");
+    padding: 10px;
 
-    resultado.style.display = "block";
-
-    resultado.innerHTML = `
-
-        <h2>♻️ Resultado</h2>
-
-        <p>
-            <strong>Residuo:</strong>
-            ${escaparHTML(datos.nombre || "No identificado")}
-        </p>
-
-        <p>
-            <strong>Categoría:</strong>
-            ${escaparHTML(datos.categoria || "No identificada")}
-        </p>
-
-        <p>
-            <strong>Contenedor recomendado:</strong>
-            ${escaparHTML(datos.contenedor || "Consultar clasificación local")}
-        </p>
-
-        <p>
-            <strong>¿Por qué?</strong><br>
-            ${escaparHTML(datos.explicacion || "No disponible")}
-        </p>
-
-        <p>
-            <strong>♻️ Recomendación:</strong><br>
-            ${escaparHTML(datos.recomendacion || "Consulta las normas locales.")}
-        </p>
-
-        <p class="pequeno">
-            ⚠️ La identificación mediante IA puede equivocarse.
-            Si existe duda, verifica las normas de reciclaje de tu localidad.
-        </p>
-    `;
+    margin-top: 10px;
 }
+
+.barra {
+    height: 18px;
+
+    background: #d8ead8;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    margin-top: 8px;
+}
+
+.barra-interior {
+    height: 100%;
+
+    background: #43a047;
+
+    transition: width 0.4s;
+}
+
 
 /* =========================
    BUSCADOR
 ========================= */
 
-const residuos = {
+input[type="text"] {
+    width: 100%;
 
-    "cascara de manzana": {
-        categoria: "Orgánico",
-        contenedor: "Orgánicos",
-        explicacion: "Es un residuo biodegradable proveniente de una fruta."
-    },
+    padding: 15px;
 
-    "cascara de banano": {
-        categoria: "Orgánico",
-        contenedor: "Orgánicos",
-        explicacion: "Es materia orgánica biodegradable."
-    },
+    border: 2px solid #c8e6c9;
 
-    "pizza": {
-        categoria: "Orgánico",
-        contenedor: "Orgánicos o compostaje, según las normas locales",
-        explicacion: "Los restos de comida son residuos orgánicos."
-    },
+    border-radius: 12px;
 
-    "botella plastica": {
-        categoria: "Plástico",
-        contenedor: "Plásticos reciclables",
-        explicacion: "Es un envase fabricado principalmente de plástico."
-    },
+    font-size: 17px;
 
-    "botella de vidrio": {
-        categoria: "Vidrio",
-        contenedor: "Vidrio",
-        explicacion: "Es un recipiente de vidrio."
-    },
-
-    "lata": {
-        categoria: "Metal",
-        contenedor: "Metales",
-        explicacion: "Las latas de aluminio o acero pueden ser reciclables."
-    },
-
-    "foco": {
-        categoria: "Especial",
-        contenedor: "Punto de recolección especial",
-        explicacion: "Los focos pueden requerir un manejo especial."
-    },
-
-    "pila": {
-        categoria: "Especial/Peligroso",
-        contenedor: "Punto de recolección de pilas",
-        explicacion: "Las pilas requieren manejo especial."
-    },
-
-    "cargador": {
-        categoria: "Electrónico",
-        contenedor: "Punto de recolección de electrónicos",
-        explicacion: "Es un aparato o accesorio electrónico."
-    },
-
-    "destornillador": {
-        categoria: "Metal/Objeto especial",
-        contenedor: "Reutilización o recolección de metales",
-        explicacion: "Es una herramienta principalmente metálica."
-    }
-
-};
-
-function buscarResiduo() {
-
-    const texto = document
-        .getElementById("busqueda")
-        .value
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim();
-
-    if(!texto) {
-
-        alert("Escribe un residuo.");
-        return;
-    }
-
-    let encontrado = null;
-
-    for(const nombre in residuos) {
-
-        if(
-            texto.includes(nombre) ||
-            nombre.includes(texto)
-        ) {
-
-            encontrado = residuos[nombre];
-            break;
-        }
-    }
-
-    const div = document.getElementById("resultadoBusqueda");
-
-    if(!encontrado) {
-
-        div.innerHTML = `
-            <div id="resultado">
-                <h3>🤔 No encontrado</h3>
-                <p>
-                    No encontramos ese residuo en nuestra base de datos.
-                    Puedes intentar con otro nombre o utilizar la cámara.
-                </p>
-            </div>
-        `;
-
-        div.querySelector("#resultado").style.display = "block";
-
-        return;
-    }
-
-    div.innerHTML = `
-
-        <div id="resultado" style="display:block;">
-
-            <h2>♻️ Resultado</h2>
-
-            <p>
-                <strong>Categoría:</strong>
-                ${escaparHTML(encontrado.categoria)}
-            </p>
-
-            <p>
-                <strong>Contenedor:</strong>
-                ${escaparHTML(encontrado.contenedor)}
-            </p>
-
-            <p>
-                <strong>Explicación:</strong>
-                ${escaparHTML(encontrado.explicacion)}
-            </p>
-
-        </div>
-    `;
-
-    guardarHistorial(texto, encontrado.categoria);
+    outline: none;
 }
+
+input[type="text"]:focus {
+    border-color: #43a047;
+}
+
+.resultado-busqueda {
+    margin-top: 18px;
+
+    padding: 18px;
+
+    background: #f1f8e9;
+
+    border-radius: 15px;
+}
+
+
+/* =========================
+   CATEGORÍAS
+========================= */
+
+.categorias {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(200px, 1fr));
+
+    gap: 15px;
+}
+
+.categoria {
+    padding: 20px;
+
+    border-radius: 16px;
+
+    background: #f1f8e9;
+
+    text-align: center;
+}
+
+.categoria .emoji {
+    font-size: 40px;
+}
+
+.categoria strong {
+    display: block;
+
+    font-size: 19px;
+
+    margin: 8px 0;
+}
+
 
 /* =========================
    HISTORIAL
 ========================= */
 
-function guardarHistorial(nombre, categoria) {
+.historial-item {
+    background: #f5f5f5;
 
-    let historial = JSON.parse(
-        localStorage.getItem("ecoclass_historial") || "[]"
-    );
+    padding: 14px;
 
-    historial.unshift({
+    margin: 9px 0;
 
-        nombre: nombre,
-        categoria: categoria,
-        fecha: new Date().toLocaleString()
-
-    });
-
-    historial = historial.slice(0, 30);
-
-    localStorage.setItem(
-        "ecoclass_historial",
-        JSON.stringify(historial)
-    );
-
-    mostrarHistorial();
+    border-radius: 12px;
 }
 
-function mostrarHistorial() {
+.fecha {
+    color: #666;
 
-    const historial = JSON.parse(
-        localStorage.getItem("ecoclass_historial") || "[]"
-    );
+    font-size: 13px;
+}
 
-    const div = document.getElementById("historial");
 
-    if(historial.length === 0) {
+/* =========================
+   MENSAJES
+========================= */
 
-        div.innerHTML = "<p>Aún no hay búsquedas.</p>";
-        return;
+#estado {
+    text-align: center;
+
+    padding: 15px;
+
+    font-weight: bold;
+}
+
+.advertencia {
+    padding: 14px;
+
+    background: #fff8e1;
+
+    border-left: 5px solid #f9a825;
+
+    border-radius: 10px;
+
+    margin-top: 15px;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+    background: #1b5e20;
+
+    color: white;
+
+    text-align: center;
+
+    padding: 25px;
+
+    margin-top: 30px;
+}
+
+
+/* =========================
+   CELULAR
+========================= */
+
+@media(max-width:600px) {
+
+    header h1 {
+        font-size: 32px;
     }
 
-    div.innerHTML = historial.map(item => `
+    button {
+        width: 100%;
 
-        <div class="historial-item">
+        margin: 5px 0;
+    }
 
-            ♻️ <strong>
-                ${escaparHTML(item.nombre)}
+    .card {
+        padding: 18px;
+    }
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================
+     ENCABEZADO
+========================= -->
+
+<header>
+
+    <h1>♻️ EcoClass</h1>
+
+    <p>
+        Clasificador inteligente de residuos
+    </p>
+
+    <p>
+        🔬 Proyecto de 2.º Básico · Feria Científica
+    </p>
+
+</header>
+
+
+<div class="container">
+
+
+<!-- =========================
+     PRESENTACIÓN
+========================= -->
+
+<div class="card">
+
+    <h2>🌱 Bienvenido a EcoClass</h2>
+
+    <p>
+        EcoClass es un proyecto de
+        <strong>2.º Básico para una Feria Científica</strong>
+        que utiliza tecnología para ayudar a identificar
+        y clasificar diferentes residuos.
+    </p>
+
+    <p>
+        Puedes utilizar la cámara para mostrar un objeto,
+        subir una fotografía o escribir el nombre de un residuo.
+    </p>
+
+</div>
+
+
+<!-- =========================
+     CÁMARA
+========================= -->
+
+<div class="card">
+
+    <h2>📷 Reconocer residuo con cámara</h2>
+
+    <p>
+        Coloca un residuo frente a la cámara y
+        EcoClass intentará identificar su categoría.
+    </p>
+
+    <button onclick="iniciarCamara()">
+        📷 Encender cámara
+    </button>
+
+    <button onclick="detenerCamara()">
+        ⛔ Apagar cámara
+    </button>
+
+    <div id="estado">
+        🔄 Preparando el modelo...
+    </div>
+
+    <div id="camara"></div>
+
+    <div id="resultado">
+
+        <div class="resultado-icono" id="iconoResultado">
+            ♻️
+        </div>
+
+        <h2 id="nombreResultado">
+            Residuo
+        </h2>
+
+        <p>
+            <strong>Categoría:</strong>
+            <span id="categoriaResultado"></span>
+        </p>
+
+        <p>
+            <strong>Contenedor recomendado:</strong>
+            <span id="contenedorResultado"></span>
+        </p>
+
+        <p>
+            <strong>¿Qué significa?</strong>
+        </p>
+
+        <p id="explicacionResultado"></p>
+
+        <div class="confianza">
+
+            <strong>
+                Confianza de la identificación:
             </strong>
 
-            <br>
-
-            Categoría:
-            ${escaparHTML(item.categoria)}
-
-            <br>
-
-            <span class="pequeno">
-                ${escaparHTML(item.fecha)}
+            <span id="porcentajeResultado">
+                0%
             </span>
+
+            <div class="barra">
+
+                <div
+                    id="barraConfianza"
+                    class="barra-interior"
+                    style="width:0%">
+                </div>
+
+            </div>
 
         </div>
 
-    `).join("");
+        <div class="advertencia">
+
+            ⚠️ La inteligencia artificial puede
+            equivocarse. Si tienes dudas, verifica
+            las normas de reciclaje de tu localidad.
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     BUSCADOR
+========================= -->
+
+<div class="card">
+
+    <h2>🔎 Buscar un residuo</h2>
+
+    <p>
+        También puedes escribir el nombre del objeto.
+    </p>
+
+    <input
+        type="text"
+        id="busqueda"
+        placeholder="Ejemplo: cáscara de manzana"
+    >
+
+    <button onclick="buscarResiduo()">
+        🔍 Buscar
+    </button>
+
+    <div id="resultadoBusqueda"></div>
+
+</div>
+
+
+<!-- =========================
+     CATEGORÍAS
+========================= -->
+
+<div class="card">
+
+    <h2>♻️ Tipos de residuos</h2>
+
+    <div class="categorias">
+
+
+        <div class="categoria">
+
+            <div class="emoji">🍎</div>
+
+            <strong>Orgánicos</strong>
+
+            <p>
+                Cáscaras de frutas, verduras,
+                restos de comida, café y hojas.
+            </p>
+
+        </div>
+
+
+        <div class="categoria">
+
+            <div class="emoji">📄</div>
+
+            <strong>Papel y cartón</strong>
+
+            <p>
+                Hojas, periódicos, revistas,
+                cajas y cartón limpio.
+            </p>
+
+        </div>
+
+
+        <div class="categoria">
+
+            <div class="emoji">🥤</div>
+
+            <strong>Plástico</strong>
+
+            <p>
+                Botellas, envases y recipientes
+                plásticos reciclables.
+            </p>
+
+        </div>
+
+
+        <div class="categoria">
+
+            <div class="emoji">🍾</div>
+
+            <strong>Vidrio</strong>
+
+            <p>
+                Botellas y frascos de vidrio.
+            </p>
+
+        </div>
+
+
+        <div class="categoria">
+
+            <div class="emoji">🥫</div>
+
+            <strong>Metal</strong>
+
+            <p>
+                Latas y otros objetos metálicos
+                reciclables.
+            </p>
+
+        </div>
+
+
+        <div class="categoria">
+
+            <div class="emoji">💻</div>
+
+            <strong>Electrónicos</strong>
+
+            <p>
+                Cables, cargadores, celulares,
+                teclados y aparatos electrónicos.
+            </p>
+
+        </div>
+
+
+        <div class="categoria">
+
+            <div class="emoji">⚠️</div>
+
+            <strong>Especiales</strong>
+
+            <p>
+                Pilas, baterías, focos y otros
+                residuos que necesitan manejo especial.
+            </p>
+
+        </div>
+
+
+        <div class="categoria">
+
+            <div class="emoji">🚫</div>
+
+            <strong>No reciclables</strong>
+
+            <p>
+                Materiales que no pueden recuperarse
+                mediante reciclaje convencional.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     EJEMPLOS
+========================= -->
+
+<div class="card">
+
+    <h2>📚 Ejemplos</h2>
+
+    <p>
+        🍎 <strong>Cáscara de manzana:</strong>
+        Orgánico.
+    </p>
+
+    <p>
+        🍌 <strong>Cáscara de banano:</strong>
+        Orgánico.
+    </p>
+
+    <p>
+        🍕 <strong>Restos de pizza:</strong>
+        Orgánico o compostaje según las condiciones locales.
+    </p>
+
+    <p>
+        🥤 <strong>Botella de plástico:</strong>
+        Plástico reciclable si el sistema local la acepta.
+    </p>
+
+    <p>
+        🍾 <strong>Botella de vidrio:</strong>
+        Vidrio.
+    </p>
+
+    <p>
+        🥫 <strong>Lata:</strong>
+        Metal.
+    </p>
+
+    <p>
+        🔌 <strong>Cargador:</strong>
+        Electrónico.
+    </p>
+
+    <p>
+        🔋 <strong>Pila:</strong>
+        Residuo especial.
+    </p>
+
+    <p>
+        💡 <strong>Foco:</strong>
+        Residuo especial.
+    </p>
+
+    <p>
+        🪛 <strong>Destornillador:</strong>
+        Objeto metálico; puede requerir reutilización
+        o recolección especial.
+    </p>
+
+</div>
+
+
+<!-- =========================
+     HISTORIAL
+========================= -->
+
+<div class="card">
+
+    <h2>💾 Historial de búsquedas</h2>
+
+    <p>
+        Aquí se guardan tus últimas consultas
+        en este dispositivo.
+    </p>
+
+    <div id="historial"></div>
+
+    <button onclick="borrarHistorial()">
+        🗑️ Borrar historial
+    </button>
+
+</div>
+
+
+<!-- =========================
+     PROYECTO
+========================= -->
+
+<div class="card">
+
+    <h2>🔬 Sobre el proyecto</h2>
+
+    <p>
+
+        <strong>EcoClass</strong> es un proyecto de
+        <strong>2.º Básico</strong> realizado para una
+        <strong>Feria Científica</strong>.
+
+    </p>
+
+    <p>
+
+        El objetivo es utilizar la tecnología y la
+        inteligencia artificial como una herramienta
+        educativa para aprender a clasificar residuos
+        y fomentar el cuidado del medio ambiente.
+
+    </p>
+
+    <h3>🎯 Objetivos</h3>
+
+    <ul>
+
+        <li>
+            Aprender a separar correctamente los residuos.
+        </li>
+
+        <li>
+            Promover el reciclaje.
+        </li>
+
+        <li>
+            Utilizar tecnología con un propósito educativo.
+        </li>
+
+        <li>
+            Conocer diferentes tipos de residuos.
+        </li>
+
+        <li>
+            Crear conciencia sobre el cuidado del planeta.
+        </li>
+
+    </ul>
+
+</div>
+
+
+</div>
+
+
+<!-- =========================
+     PIE DE PÁGINA
+========================= -->
+
+<footer>
+
+    <strong>EcoClass ♻️</strong>
+
+    <br>
+
+    Proyecto de 2.º Básico · Feria Científica
+
+    <br><br>
+
+    🌱 Tecnología para aprender a reciclar mejor
+
+</footer>
+
+
+
+<script>
+
+/* =====================================================
+   CONFIGURACIÓN DEL MODELO
+===================================================== */
+
+const MODEL_URL =
+    "https://teachablemachine.withgoogle.com/models/HamQ6chDb/";
+
+
+let modelo = null;
+
+let webcam = null;
+
+let camaraActiva = false;
+
+let ultimoResultado = "";
+
+let ultimoTiempo = 0;
+
+
+/* =====================================================
+   INFORMACIÓN DE CADA CATEGORÍA
+===================================================== */
+
+const informacion = {
+
+    organico: {
+
+        nombre: "Residuos orgánicos 🍎",
+
+        categoria: "Orgánico",
+
+        contenedor:
+            "Contenedor de residuos orgánicos",
+
+        explicacion:
+            "Son residuos biodegradables como restos de frutas, verduras y alimentos.",
+
+        icono: "🍎"
+
+    },
+
+
+    "papel y carton": {
+
+        nombre: "Papel y cartón 📄",
+
+        categoria: "Papel y cartón",
+
+        contenedor:
+            "Contenedor de papel y cartón",
+
+        explicacion:
+            "Incluye hojas, periódicos, revistas, cajas y cartón limpio.",
+
+        icono: "📄"
+
+    },
+
+
+    plastico: {
+
+        nombre: "Plástico 🥤",
+
+        categoria: "Plástico",
+
+        contenedor:
+            "Contenedor de plásticos",
+
+        explicacion:
+            "Incluye botellas, envases y otros objetos plásticos reciclables según las normas locales.",
+
+        icono: "🥤"
+
+    },
+
+
+    vidrio: {
+
+        nombre: "Vidrio 🍾",
+
+        categoria: "Vidrio",
+
+        contenedor:
+            "Contenedor de vidrio",
+
+        explicacion:
+            "Incluye botellas y frascos de vidrio que puedan reciclarse.",
+
+        icono: "🍾"
+
+    },
+
+
+    metal: {
+
+        nombre: "Metal 🥫",
+
+        categoria: "Metal",
+
+        contenedor:
+            "Contenedor de metales",
+
+        explicacion:
+            "Incluye latas y otros objetos metálicos que puedan recuperarse.",
+
+        icono: "🥫"
+
+    },
+
+
+    electronico: {
+
+        nombre: "Residuo electrónico 💻",
+
+        categoria: "Electrónico",
+
+        contenedor:
+            "Punto de recolección de electrónicos",
+
+        explicacion:
+            "Los aparatos electrónicos deben llevarse a un punto de recolección adecuado.",
+
+        icono: "💻"
+
+    },
+
+
+    especial: {
+
+        nombre: "Residuo especial ⚠️",
+
+        categoria: "Especial/Peligroso",
+
+        contenedor:
+            "Punto de recolección especial",
+
+        explicacion:
+            "Pilas, baterías, focos y otros residuos especiales requieren manejo adecuado.",
+
+        icono: "⚠️"
+
+    },
+
+
+    "no reciclable": {
+
+        nombre: "No reciclable 🚫",
+
+        categoria: "No reciclable",
+
+        contenedor:
+            "Contenedor de residuos no reciclables",
+
+        explicacion:
+            "Materiales que no pueden recuperarse mediante el reciclaje convencional.",
+
+        icono: "🚫"
+
+    }
+
+};
+
+
+/* =====================================================
+   CARGAR MODELO
+===================================================== */
+
+async function cargarModelo() {
+
+    try {
+
+        document.getElementById("estado").innerHTML =
+            "🔄 Cargando modelo de EcoClass...";
+
+        modelo = await tmImage.load(
+
+            MODEL_URL + "model.json",
+
+            MODEL_URL + "metadata.json"
+
+        );
+
+        document.getElementById("estado").innerHTML =
+            "✅ Modelo listo. ¡Puedes usar la cámara!";
+
+        console.log(
+            "EcoClass: modelo cargado correctamente."
+        );
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+        document.getElementById("estado").innerHTML =
+            "❌ No se pudo cargar el modelo.";
+
+    }
+
 }
+
+
+/* =====================================================
+   ENCENDER CÁMARA
+===================================================== */
+
+async function iniciarCamara() {
+
+    try {
+
+        if(!modelo) {
+
+            await cargarModelo();
+
+        }
+
+
+        if(camaraActiva) {
+
+            return;
+
+        }
+
+
+        webcam = new tmImage.Webcam(
+
+            400,
+            400,
+            true
+
+        );
+
+
+        await webcam.setup({
+
+            facingMode: "environment"
+
+        });
+
+
+        await webcam.play();
+
+
+        camaraActiva = true;
+
+
+        document.getElementById("camara").innerHTML = "";
+
+
+        document
+            .getElementById("camara")
+            .appendChild(webcam.canvas);
+
+
+        document.getElementById("estado").innerHTML =
+            "📷 Cámara activa. Apunta al residuo.";
+
+
+        analizarCamara();
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+        document.getElementById("estado").innerHTML =
+            "❌ No se pudo abrir la cámara.";
+
+        alert(
+            "No se pudo utilizar la cámara. " +
+            "Asegúrate de permitir el acceso a la cámara."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   ANALIZAR CÁMARA
+===================================================== */
+
+async function analizarCamara() {
+
+    if(!camaraActiva) {
+
+        return;
+
+    }
+
+
+    webcam.update();
+
+
+    try {
+
+        const predicciones =
+            await modelo.predict(webcam.canvas);
+
+
+        predicciones.sort(
+
+            (a,b) =>
+                b.probability -
+                a.probability
+
+        );
+
+
+        const mejor =
+            predicciones[0];
+
+
+        const confianza =
+            mejor.probability;
+
+
+        mostrarResultado(
+
+            mejor.className,
+
+            confianza
+
+        );
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+    }
+
+
+    requestAnimationFrame(
+
+        analizarCamara
+
+    );
+
+}
+
+
+/* =====================================================
+   DETENER CÁMARA
+===================================================== */
+
+function detenerCamara() {
+
+    camaraActiva = false;
+
+
+    if(webcam) {
+
+        webcam.stop();
+
+        webcam = null;
+
+    }
+
+
+    document.getElementById("camara").innerHTML = "";
+
+
+    document.getElementById("estado").innerHTML =
+        "⛔ Cámara apagada.";
+
+}
+
+
+/* =====================================================
+   LIMPIAR NOMBRE DE CLASE
+===================================================== */
+
+function limpiarNombre(nombre) {
+
+    return nombre
+
+        .toLowerCase()
+
+        .normalize("NFD")
+
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        )
+
+        .trim();
+
+}
+
+
+/* =====================================================
+   OBTENER INFORMACIÓN
+===================================================== */
+
+function obtenerInformacion(clase) {
+
+    const nombre =
+        limpiarNombre(clase);
+
+
+    if(
+        nombre.includes("organ")
+    ) {
+
+        return informacion.organico;
+
+    }
+
+
+    if(
+        nombre.includes("papel") ||
+        nombre.includes("carton")
+    ) {
+
+        return informacion["papel y carton"];
+
+    }
+
+
+    if(
+        nombre.includes("plast")
+    ) {
+
+        return informacion.plastico;
+
+    }
+
+
+    if(
+        nombre.includes("vidrio") ||
+        nombre.includes("glass")
+    ) {
+
+        return informacion.vidrio;
+
+    }
+
+
+    if(
+        nombre.includes("metal")
+    ) {
+
+        return informacion.metal;
+
+    }
+
+
+    if(
+        nombre.includes("electr")
+    ) {
+
+        return informacion.electronico;
+
+    }
+
+
+    if(
+        nombre.includes("especial") ||
+        nombre.includes("peligro")
+    ) {
+
+        return informacion.especial;
+
+    }
+
+
+    if(
+        nombre.includes("no recicl") ||
+        nombre.includes("basura")
+    ) {
+
+        return informacion["no reciclable"];
+
+    }
+
+
+    return {
+
+        nombre: clase,
+
+        categoria: clase,
+
+        contenedor:
+            "Consultar normas locales",
+
+        explicacion:
+            "El modelo reconoció esta clase, pero no tenemos una descripción específica.",
+
+        icono: "♻️"
+
+    };
+
+}
+
+
+/* =====================================================
+   MOSTRAR RESULTADO
+===================================================== */
+
+function mostrarResultado(
+
+    clase,
+    confianza
+
+) {
+
+    const info =
+        obtenerInformacion(clase);
+
+
+    const porcentaje =
+        Math.round(
+            confianza * 100
+        );
+
+
+    document.getElementById(
+        "resultado"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "iconoResultado"
+    ).textContent =
+        info.icono;
+
+
+    document.getElementById(
+        "nombreResultado"
+    ).textContent =
+        info.nombre;
+
+
+    document.getElementById(
+        "categoriaResultado"
+    ).textContent =
+        info.categoria;
+
+
+    document.getElementById(
+        "contenedorResultado"
+    ).textContent =
+        info.contenedor;
+
+
+    document.getElementById(
+        "explicacionResultado"
+    ).textContent =
+        info.explicacion;
+
+
+    document.getElementById(
+        "porcentajeResultado"
+    ).textContent =
+        porcentaje + "%";
+
+
+    document.getElementById(
+        "barraConfianza"
+    ).style.width =
+        porcentaje + "%";
+
+
+    /*
+       Solo guardamos automáticamente
+       cuando la confianza es razonable.
+    */
+
+    const ahora =
+        Date.now();
+
+
+    if(
+
+        confianza >= 0.70 &&
+
+        (
+            info.nombre !== ultimoResultado ||
+
+            ahora - ultimoTiempo > 10000
+
+        )
+
+    ) {
+
+        guardarHistorial(
+
+            info.nombre,
+
+            info.categoria,
+
+            porcentaje
+
+        );
+
+
+        ultimoResultado =
+            info.nombre;
+
+
+        ultimoTiempo =
+            ahora;
+
+    }
+
+}
+
+
+/* =====================================================
+   BASE DE DATOS PARA BÚSQUEDA ESCRITA
+===================================================== */
+
+const residuos = [
+
+    {
+
+        palabras: [
+            "manzana",
+            "cascara de manzana"
+        ],
+
+        nombre:
+            "Cáscara de manzana 🍎",
+
+        categoria:
+            "Orgánico",
+
+        contenedor:
+            "Contenedor de orgánicos",
+
+        explicacion:
+            "La cáscara de manzana es un residuo biodegradable."
+
+    },
+
+
+    {
+
+        palabras: [
+            "banano",
+            "banana",
+            "cascara de banano"
+        ],
+
+        nombre:
+            "Cáscara de banano 🍌",
+
+        categoria:
+            "Orgánico",
+
+        contenedor:
+            "Contenedor de orgánicos",
+
+        explicacion:
+            "Es un residuo orgánico biodegradable."
+
+    },
+
+
+    {
+
+        palabras: [
+            "pizza"
+        ],
+
+        nombre:
+            "Restos de pizza 🍕",
+
+        categoria:
+            "Orgánico",
+
+        contenedor:
+            "Orgánicos o compostaje, según las condiciones locales",
+
+        explicacion:
+            "Los restos de alimentos son residuos orgánicos."
+
+    },
+
+
+    {
+
+        palabras: [
+            "botella plastica",
+            "botella de plastico",
+            "plastico"
+        ],
+
+        nombre:
+            "Botella de plástico 🥤",
+
+        categoria:
+            "Plástico",
+
+        contenedor:
+            "Contenedor de plásticos",
+
+        explicacion:
+            "Es un envase plástico que puede ser reciclable si el sistema local lo acepta."
+
+    },
+
+
+    {
+
+        palabras: [
+            "botella vidrio",
+            "botella de vidrio",
+            "frasco vidrio"
+        ],
+
+        nombre:
+            "Botella de vidrio 🍾",
+
+        categoria:
+            "Vidrio",
+
+        contenedor:
+            "Contenedor de vidrio",
+
+        explicacion:
+            "Los envases de vidrio pueden reciclarse según el sistema local."
+
+    },
+
+
+    {
+
+        palabras: [
+            "lata",
+            "lata aluminio",
+            "aluminio"
+        ],
+
+        nombre:
+            "Lata de metal 🥫",
+
+        categoria:
+            "Metal",
+
+        contenedor:
+            "Contenedor de metales",
+
+        explicacion:
+            "Las latas de aluminio o acero pueden ser reciclables."
+
+    },
+
+
+    {
+
+        palabras: [
+            "papel",
+            "hoja",
+            "hoja de papel"
+        ],
+
+        nombre:
+            "Papel 📄",
+
+        categoria:
+            "Papel y cartón",
+
+        contenedor:
+            "Contenedor de papel y cartón",
+
+        explicacion:
+            "El papel limpio y seco puede reciclarse."
+
+    },
+
+
+    {
+
+        palabras: [
+            "carton",
+            "caja",
+            "caja de carton"
+        ],
+
+        nombre:
+            "Cartón 📦",
+
+        categoria:
+            "Papel y cartón",
+
+        contenedor:
+            "Contenedor de papel y cartón",
+
+        explicacion:
+            "El cartón limpio puede reciclarse."
+
+    },
+
+
+    {
+
+        palabras: [
+            "cargador",
+            "cable",
+            "celular",
+            "telefono",
+            "mouse",
+            "teclado"
+        ],
+
+        nombre:
+            "Residuo electrónico 💻",
+
+        categoria:
+            "Electrónico",
+
+        contenedor:
+            "Punto de recolección electrónico",
+
+        explicacion:
+            "Los aparatos electrónicos deben llevarse a puntos de recolección adecuados."
+
+    },
+
+
+    {
+
+        palabras: [
+            "pila",
+            "bateria",
+            "bateria recargable"
+        ],
+
+        nombre:
+            "Pila o batería 🔋",
+
+        categoria:
+            "Especial/Peligroso",
+
+        contenedor:
+            "Punto de recolección de pilas y baterías",
+
+        explicacion:
+            "Las pilas y baterías requieren manejo especial."
+
+    },
+
+
+    {
+
+        palabras: [
+            "foco",
+            "bombilla",
+            "lampara"
+        ],
+
+        nombre:
+            "Foco o bombilla 💡",
+
+        categoria:
+            "Especial",
+
+        contenedor:
+            "Punto de recolección especial",
+
+        explicacion:
+            "No debe colocarse automáticamente con el vidrio común."
+
+    },
+
+
+    {
+
+        palabras: [
+            "destornillador",
+            "herramienta"
+        ],
+
+        nombre:
+            "Destornillador 🪛",
+
+        categoria:
+            "Metal/Objeto especial",
+
+        contenedor:
+            "Reutilización o recolección de metales",
+
+        explicacion:
+            "Es una herramienta principalmente metálica."
+
+    }
+
+];
+
+
+/* =====================================================
+   BUSCAR RESIDUO
+===================================================== */
+
+function buscarResiduo() {
+
+    const entrada =
+        document.getElementById(
+            "busqueda"
+        ).value;
+
+
+    const texto =
+        limpiarNombre(entrada);
+
+
+    if(!texto) {
+
+        alert(
+            "Escribe el nombre de un residuo."
+        );
+
+        return;
+
+    }
+
+
+    let encontrado = null;
+
+
+    for(
+        const residuo of residuos
+    ) {
+
+        for(
+            const palabra of residuo.palabras
+        ) {
+
+            if(
+                limpiarNombre(palabra)
+                    .includes(texto)
+
+                ||
+
+                texto.includes(
+                    limpiarNombre(palabra)
+                )
+            ) {
+
+                encontrado =
+                    residuo;
+
+                break;
+
+            }
+
+        }
+
+
+        if(encontrado) {
+
+            break;
+
+        }
+
+    }
+
+
+    const resultado =
+        document.getElementById(
+            "resultadoBusqueda"
+        );
+
+
+    if(!encontrado) {
+
+        resultado.innerHTML = `
+
+            <div class="resultado-busqueda">
+
+                <h3>🤔 No encontramos ese residuo</h3>
+
+                <p>
+                    Intenta escribir otro nombre
+                    o utiliza la cámara.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    resultado.innerHTML = `
+
+        <div class="resultado-busqueda">
+
+            <h3>
+                ${encontrado.nombre}
+            </h3>
+
+            <p>
+                <strong>Categoría:</strong>
+                ${encontrado.categoria}
+            </p>
+
+            <p>
+                <strong>Contenedor:</strong>
+                ${encontrado.contenedor}
+            </p>
+
+            <p>
+                <strong>Información:</strong>
+                ${encontrado.explicacion}
+            </p>
+
+        </div>
+
+    `;
+
+
+    guardarHistorial(
+
+        encontrado.nombre,
+
+        encontrado.categoria,
+
+        100
+
+    );
+
+}
+
+
+/* =====================================================
+   HISTORIAL
+===================================================== */
+
+function guardarHistorial(
+
+    nombre,
+    categoria,
+    confianza
+
+) {
+
+    let historial =
+        JSON.parse(
+
+            localStorage.getItem(
+                "ecoclass_historial"
+            )
+
+            || "[]"
+
+        );
+
+
+    historial.unshift({
+
+        nombre:
+            nombre,
+
+        categoria:
+            categoria,
+
+        confianza:
+            confianza,
+
+        fecha:
+            new Date().toLocaleString()
+
+    });
+
+
+    /*
+       Guardamos solamente
+       las últimas 50 consultas.
+    */
+
+    historial =
+        historial.slice(0, 50);
+
+
+    localStorage.setItem(
+
+        "ecoclass_historial",
+
+        JSON.stringify(historial)
+
+    );
+
+
+    mostrarHistorial();
+
+}
+
+
+/* =====================================================
+   MOSTRAR HISTORIAL
+===================================================== */
+
+function mostrarHistorial() {
+
+    const historial =
+        JSON.parse(
+
+            localStorage.getItem(
+                "ecoclass_historial"
+            )
+
+            || "[]"
+
+        );
+
+
+    const div =
+        document.getElementById(
+            "historial"
+        );
+
+
+    if(
+        historial.length === 0
+    ) {
+
+        div.innerHTML = `
+
+            <p>
+                📭 Todavía no hay búsquedas.
+            </p>
+
+        `;
+
+        return;
+
+    }
+
+
+    div.innerHTML =
+        historial.map(
+
+            item => `
+
+                <div class="historial-item">
+
+                    ♻️
+                    <strong>
+                        ${escaparHTML(item.nombre)}
+                    </strong>
+
+                    <br>
+
+                    Categoría:
+                    ${escaparHTML(item.categoria)}
+
+                    <br>
+
+                    Confianza:
+                    ${item.confianza}%
+
+                    <br>
+
+                    <span class="fecha">
+
+                        ${escaparHTML(item.fecha)}
+
+                    </span>
+
+                </div>
+
+            `
+
+        ).join("");
+
+}
+
+
+/* =====================================================
+   BORRAR HISTORIAL
+===================================================== */
 
 function borrarHistorial() {
 
-    localStorage.removeItem("ecoclass_historial");
+    if(
+        confirm(
+            "¿Quieres borrar todo el historial?"
+        )
+    ) {
 
-    mostrarHistorial();
+        localStorage.removeItem(
+            "ecoclass_historial"
+        );
+
+
+        mostrarHistorial();
+
+    }
+
 }
 
-/* =========================
-   SEGURIDAD
-========================= */
+
+/* =====================================================
+   SEGURIDAD PARA TEXTO
+===================================================== */
 
 function escaparHTML(texto) {
 
     return String(texto)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
 }
 
-/* =========================
-   INICIAR
-========================= */
+
+/* =====================================================
+   INICIAR ECOCLASS
+===================================================== */
 
 mostrarHistorial();
 
+cargarModelo();
+
 </script>
 
+
 </body>
+
 </html>
