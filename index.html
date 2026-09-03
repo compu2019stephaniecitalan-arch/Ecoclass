@@ -3,177 +3,1186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0b8f3e">
+
 <title>EcoClasificador ♻️</title>
+
+<!-- TensorFlow.js -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+
+<!-- Teachable Machine -->
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
 <style>
-*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#e8f5e9,#f7fff8);color:#173b25}
-header{background:linear-gradient(135deg,#087f23,#18a558);color:#fff;padding:28px 15px;text-align:center;box-shadow:0 4px 16px #0002} header h1{margin:0;font-size:34px} header p{margin:8px 0 0}
-.container{width:95%;max-width:900px;margin:24px auto}.card{background:#fff;border-radius:22px;padding:22px;margin-bottom:20px;box-shadow:0 7px 22px #00000012}.card h2{margin-top:0;color:#087f23}
-button{border:0;border-radius:14px;padding:13px 18px;margin:4px;font-size:16px;font-weight:700;cursor:pointer}.btn-primary{background:#087f23;color:#fff}.btn-danger{background:#c62828;color:#fff}.btn-blue{background:#1976d2;color:#fff}.btn-light{background:#eee;color:#333}
-#status{text-align:center;font-weight:700;margin:12px 0}.camera-wrap{display:flex;justify-content:center}.camera-wrap canvas{width:min(90vw,420px);height:min(90vw,420px);object-fit:cover;border-radius:22px;box-shadow:0 6px 20px #0003}
-.result{text-align:center;border-radius:20px;padding:20px;background:#f1f8e9}.emoji{font-size:60px}.result h2{font-size:30px;margin:8px 0}.dato{font-size:18px;margin:9px}.bar{width:100%;height:18px;background:#ddd;border-radius:20px;overflow:hidden}.bar>div{width:0;height:100%;background:#18a558;transition:.25s}
-.search{display:flex;gap:8px}.search input{flex:1;padding:14px;border:2px solid #c8e6c9;border-radius:13px;font-size:16px;outline:0}.search input:focus{border-color:#18a558}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f1f8e9;padding:15px;text-align:center;border-radius:15px}.stat strong{display:block;font-size:28px;color:#087f23}.history-item{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid #ddd}.history-item:last-child{border-bottom:0}.history-emoji{font-size:30px}.history-info{flex:1}.history-info strong{display:block}.history-info small{color:#666}.bins{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.bin{padding:14px;border-radius:15px;background:#fafafa;text-align:center;font-weight:700}.bin span{display:block;font-size:34px;margin-bottom:6px} footer{text-align:center;padding:25px;color:#52705b}
-.notice{padding:12px 14px;border-radius:14px;background:#fff8e1;border:1px solid #ffe082;margin:12px 0}.ok{background:#e8f5e9;border-color:#a5d6a7}
-@media(max-width:600px){header h1{font-size:28px}.card{padding:17px}.grid{grid-template-columns:1fr}.search{flex-direction:column}.search button,button{width:100%;margin:5px 0}.bins{grid-template-columns:1fr 1fr}}
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #e8f5e9, #ffffff);
+    color: #1b4332;
+}
+
+header {
+    background: #2e7d32;
+    color: white;
+    text-align: center;
+    padding: 25px 15px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 35px;
+}
+
+header p {
+    margin: 8px 0 0;
+    font-size: 17px;
+}
+
+.contenedor {
+    width: 92%;
+    max-width: 850px;
+    margin: 20px auto;
+}
+
+.tarjeta {
+    background: white;
+    padding: 22px;
+    margin-bottom: 20px;
+    border-radius: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+}
+
+h2 {
+    color: #2e7d32;
+    margin-top: 0;
+}
+
+.instrucciones {
+    line-height: 1.7;
+}
+
+.instrucciones li {
+    margin-bottom: 8px;
+}
+
+.botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+button,
+.botonArchivo {
+    border: none;
+    border-radius: 12px;
+    padding: 13px 18px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-camara {
+    background: #2e7d32;
+    color: white;
+}
+
+.btn-cambiar {
+    background: #1976d2;
+    color: white;
+}
+
+.btn-detener {
+    background: #c62828;
+    color: white;
+}
+
+.botonArchivo {
+    display: inline-block;
+    background: #f9a825;
+    color: white;
+}
+
+#archivo {
+    display: none;
+}
+
+#webcam-container,
+#foto-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#webcam-container canvas,
+#foto-container img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 18px;
+    border: 4px solid #2e7d32;
+}
+
+.resultado {
+    text-align: center;
+    margin-top: 20px;
+    padding: 20px;
+    background: #f1f8e9;
+    border-radius: 15px;
+}
+
+.resultado h3 {
+    font-size: 25px;
+    margin: 5px;
+}
+
+.bote {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.confianza {
+    margin-top: 10px;
+    font-size: 18px;
+}
+
+.barra {
+    width: 100%;
+    height: 18px;
+    background: #ddd;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.barra-interior {
+    height: 100%;
+    width: 0%;
+    background: #43a047;
+    transition: width 0.4s;
+}
+
+.busqueda {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.busqueda input {
+    flex: 1;
+    min-width: 200px;
+    padding: 13px;
+    border: 2px solid #81c784;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+.btn-buscar {
+    background: #388e3c;
+    color: white;
+}
+
+#resultadoBusqueda {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    background: #f1f8e9;
+}
+
+.historial {
+    padding-left: 20px;
+}
+
+.historial li {
+    margin-bottom: 8px;
+}
+
+.categorias {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.categoria {
+    padding: 15px;
+    border-radius: 14px;
+    background: #f1f8e9;
+    text-align: center;
+}
+
+.integrantes {
+    line-height: 1.8;
+}
+
+footer {
+    text-align: center;
+    background: #1b5e20;
+    color: white;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.oculto {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 28px;
+    }
+
+    .tarjeta {
+        padding: 16px;
+    }
+
+    button,
+    .botonArchivo {
+        width: 100%;
+    }
+}
 </style>
 </head>
+
 <body>
+
 <header>
-<h1>♻️ EcoClasificador</h1>
-<p>Tecnología para reciclar mejor</p>
-<p>Proyecto de Ciencias Naturales • 2.º Básico</p>
+    <h1>♻️ ECOCLASIFICADOR</h1>
+    <p>Tecnología para reciclar mejor</p>
 </header>
-<div class="container">
-<div class="card">
-<h2>📷 Clasificador con cámara</h2>
-<p>Coloca un residuo frente a la cámara y el modelo entrenado intentará identificarlo.</p>
-<div class="notice">✅ Modelo conectado: <b>CGfRPT97U</b></div>
-<button class="btn-primary" onclick="iniciarCamara()">📷 Iniciar cámara</button>
-<button class="btn-danger" onclick="detenerCamara()">⛔ Detener</button>
-<div id="status">Cámara apagada</div>
-<div id="webcam-container" class="camera-wrap"></div>
+
+<div class="contenedor">
+
+    <!-- INSTRUCCIONES -->
+    <section class="tarjeta">
+        <h2>📖 Instrucciones</h2>
+
+        <ol class="instrucciones">
+            <li>📷 Presiona <b>Iniciar cámara</b> para usar la cámara de tu dispositivo.</li>
+            <li>🔄 Usa <b>Cambiar cámara</b> para cambiar entre la cámara frontal y trasera.</li>
+            <li>♻️ Coloca el residuo frente a la cámara y espera unos segundos.</li>
+            <li>🧠 EcoClasificador analizará la imagen y mostrará la categoría.</li>
+            <li>🗑️ También te indicará el bote recomendado.</li>
+            <li>🖼️ Si no quieres esperar enfocando la cámara, puedes usar <b>Subir una foto</b>.</li>
+            <li>🔎 También puedes escribir el nombre de un objeto en el buscador.</li>
+        </ol>
+
+        <p>
+            <b>Importante:</b> el resultado es una ayuda para clasificar residuos.
+            Las reglas de reciclaje pueden cambiar dependiendo del lugar.
+        </p>
+    </section>
+
+    <!-- CÁMARA -->
+    <section class="tarjeta">
+        <h2>📷 Reconocer residuo</h2>
+
+        <div class="botones">
+            <button class="btn-camara" onclick="iniciarCamara()">
+                📷 Iniciar cámara
+            </button>
+
+            <button class="btn-cambiar" onclick="cambiarCamara()">
+                🔄 Cambiar cámara
+            </button>
+
+            <button class="btn-detener" onclick="detenerCamara()">
+                ⏹️ Detener cámara
+            </button>
+
+            <label for="archivo" class="botonArchivo">
+                🖼️ Subir una foto
+            </label>
+
+            <input
+                type="file"
+                id="archivo"
+                accept="image/*"
+                onchange="analizarFoto(event)"
+            >
+        </div>
+
+        <div id="estado" style="text-align:center; margin-top:15px;">
+            Cámara apagada
+        </div>
+
+        <div id="webcam-container"></div>
+
+        <div id="foto-container"></div>
+
+        <div id="resultado" class="resultado oculto">
+            <h3 id="nombreResultado"></h3>
+            <div id="categoriaResultado"></div>
+            <div id="boteResultado" class="bote"></div>
+            <div class="confianza">
+                Confianza: <span id="porcentaje">0%</span>
+            </div>
+
+            <div class="barra">
+                <div id="barraInterior" class="barra-interior"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BUSCADOR -->
+    <section class="tarjeta">
+        <h2>🔎 Buscar un residuo</h2>
+
+        <div class="busqueda">
+            <input
+                type="text"
+                id="buscador"
+                placeholder="Ejemplo: botella, pila, pizza..."
+            >
+
+            <button class="btn-buscar" onclick="buscarResiduo()">
+                🔎 Buscar
+            </button>
+        </div>
+
+        <div id="resultadoBusqueda"></div>
+    </section>
+
+    <!-- CATEGORÍAS -->
+    <section class="tarjeta">
+        <h2>♻️ Categorías</h2>
+
+        <div class="categorias">
+
+            <div class="categoria">
+                🟢
+                <h3>Orgánicos</h3>
+                <p>Restos de comida, frutas, verduras y hojas.</p>
+            </div>
+
+            <div class="categoria">
+                🔵
+                <h3>Papel y cartón</h3>
+                <p>Hojas, periódicos, cajas y cartón.</p>
+            </div>
+
+            <div class="categoria">
+                🟡
+                <h3>Plástico</h3>
+                <p>Botellas, bolsas y envases plásticos.</p>
+            </div>
+
+            <div class="categoria">
+                🟢
+                <h3>Vidrio</h3>
+                <p>Botellas y frascos de vidrio.</p>
+            </div>
+
+            <div class="categoria">
+                ⚙️
+                <h3>Metales</h3>
+                <p>Latas y objetos metálicos.</p>
+            </div>
+
+            <div class="categoria">
+                🔌
+                <h3>Electrónicos</h3>
+                <p>Cargadores, cables, celulares y aparatos.</p>
+            </div>
+
+            <div class="categoria">
+                🔋
+                <h3>Especiales</h3>
+                <p>Pilas, baterías, focos y otros residuos especiales.</p>
+            </div>
+
+            <div class="categoria">
+                🚫
+                <h3>No reciclables</h3>
+                <p>Residuos que no pueden aprovecharse normalmente.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section class="tarjeta">
+        <h2>📜 Historial de búsquedas</h2>
+
+        <ul id="historial" class="historial"></ul>
+
+        <button
+            onclick="borrarHistorial()"
+            style="background:#c62828;color:white;margin-top:10px;"
+        >
+            🗑️ Borrar historial
+        </button>
+    </section>
+
+    <!-- FERIA -->
+    <section class="tarjeta">
+        <h2>🎓 Feria Científica</h2>
+
+        <p>
+            <b>Proyecto:</b> EcoClasificador ♻️
+        </p>
+
+        <p>
+            <b>Grado:</b> 2.º Básico
+        </p>
+
+        <h3>👥 Integrantes</h3>
+
+        <div class="integrantes">
+            • Stephanie Herrera<br>
+            • María José Cartagena<br>
+            • Scarleth Chinchilla<br>
+            • Emily Leon<br>
+            • Jefferson Recinos
+        </div>
+
+        <h3>🎯 Objetivo</h3>
+
+        <p>
+            Crear una herramienta tecnológica que ayude a identificar
+            diferentes tipos de residuos y oriente sobre dónde clasificarlos
+            correctamente.
+        </p>
+    </section>
+
 </div>
 
-<div class="card">
-<h2>🔎 Resultado</h2>
-<div class="result">
-<div id="resultEmoji" class="emoji">♻️</div>
-<h2 id="resultName">Esperando objeto...</h2>
-<div class="dato"><strong>Material:</strong> <span id="resultMaterial">—</span></div>
-<div class="dato"><strong>Contenedor:</strong> <span id="resultBin">—</span></div>
-<div class="dato"><strong>Confianza:</strong> <span id="resultConfidence">0%</span></div>
-<div class="bar"><div id="confidenceBar"></div></div>
-<p id="resultAdvice">Muestra un objeto frente a la cámara.</p>
-</div>
-</div>
+<footer>
+    ♻️ EcoClasificador — Feria Científica 2026<br>
+    2.º Básico
+</footer>
 
-<div class="card">
-<h2>🔎 Buscar un objeto</h2>
-<p>También puedes escribir el nombre de un residuo.</p>
-<div class="search"><input id="searchInput" type="text" placeholder="Ejemplo: botella, lata, papel..." onkeydown="if(event.key==='Enter')buscarObjeto()"><button class="btn-blue" onclick="buscarObjeto()">🔎 Buscar</button></div>
-<p><strong>💡 Ejemplos para buscar:</strong></p>
-<div class="examples" style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 15px;">
-<button type="button" class="btn-light" onclick="ponerEjemplo('botella de plástico')">🧴 Botella</button>
-<button type="button" class="btn-light" onclick="ponerEjemplo('lata')">🥫 Lata</button>
-<button type="button" class="btn-light" onclick="ponerEjemplo('papel')">📄 Papel</button>
-<button type="button" class="btn-light" onclick="ponerEjemplo('cartón')">📦 Cartón</button>
-<button type="button" class="btn-light" onclick="ponerEjemplo('vidrio')">🍾 Vidrio</button>
-<button type="button" class="btn-light" onclick="ponerEjemplo('banana')">🍌 Banana</button>
-<button type="button" class="btn-light" onclick="ponerEjemplo('foco')">💡 Foco</button>
-<button type="button" class="btn-light" onclick="ponerEjemplo('cable')">🔌 Cable</button>
-<button type="button" class="btn-light" onclick="ponerEjemplo('destornillador')">🔧 Destornillador</button>
-</div>
-<div id="searchResult"></div>
-</div>
-
-<div class="card">
-<h2>📊 Estadísticas</h2>
-<div class="grid">
-<div class="stat"><strong id="totalCount">0</strong>Clasificados</div>
-<div class="stat"><strong id="plasticCount">0</strong>Plásticos</div>
-<div class="stat"><strong id="organicCount">0</strong>Orgánicos</div>
-</div>
-</div>
-
-<div class="card">
-<h2>🕘 Historial</h2>
-<div id="history"><p>Todavía no hay clasificaciones.</p></div>
-<button class="btn-light" onclick="borrarHistorial()">🗑️ Borrar historial</button>
-</div>
-
-<div class="card">
-<h2>🗑️ Tipos de residuos</h2>
-<div class="bins">
-<div class="bin"><span>🔵</span>Plástico</div><div class="bin"><span>⚪</span>Papel</div><div class="bin"><span>🟤</span>Cartón</div><div class="bin"><span>🟡</span>Metal</div><div class="bin"><span>🟢</span>Vidrio</div><div class="bin"><span>🟤</span>Orgánico</div><div class="bin"><span>⚫</span>Especial</div>
-</div>
-<p><small>Nota: los colores de los contenedores pueden variar según el sistema de separación de tu escuela o localidad.</small></p>
-</div>
-
-<div class="card">
-<h2>🌱 ¿Cómo funciona?</h2>
-<p>📷 <b>1.</b> Muestras el objeto.</p><p>🤖 <b>2.</b> El modelo de IA analiza la imagen.</p><p>♻️ <b>3.</b> Identifica la categoría.</p><p>🗑️ <b>4.</b> Te muestra el material y contenedor recomendado.</p><p>🕘 <b>5.</b> Guarda la clasificación en el historial.</p>
-</div>
-</div>
-<footer><strong>EcoClasificador ♻️</strong><br>Tecnología para reciclar mejor 🌎</footer>
 
 <script>
-// URL REAL DE TU MODELO
-const MODEL_URL = "https://teachablemachine.withgoogle.com/models/CGfRPT97U/";
-let model=null, webcam=null, maxPredictions=0, cameraRunning=false;
-let lastPrediction="", lastPredictionTime=0;
 
-const catalog={
-  plastico:{nombre:"Plástico",material:"Plástico",bote:"🔵 Bote azul",emoji:"🧴",consejo:"Si está limpio y seco, sepáralo para reciclaje."},
-  papel:{nombre:"Papel",material:"Papel",bote:"⚪ Bote blanco",emoji:"📄",consejo:"Evita mezclar papel limpio con residuos de comida."},
-  carton:{nombre:"Cartón",material:"Cartón",bote:"🟤 Bote café",emoji:"📦",consejo:"Dobla las cajas para ahorrar espacio."},
-  metal:{nombre:"Metal",material:"Metal",bote:"🟡 Bote amarillo",emoji:"🥫",consejo:"Las latas y otros objetos metálicos pueden clasificarse como metal."},
-  vidrio:{nombre:"Vidrio",material:"Vidrio",bote:"🟢 Bote verde",emoji:"🍾",consejo:"Manipula el vidrio con cuidado."},
-  organico:{nombre:"Residuo orgánico",material:"Orgánico",bote:"🟤 Bote orgánico",emoji:"🍌",consejo:"Los restos de comida pueden aprovecharse para compostaje."},
-  electronico:{nombre:"Residuo electrónico",material:"Electrónico",bote:"⚫ Contenedor especial",emoji:"💻",consejo:"No lo tires con la basura común. Busca un punto de recolección."},
-  foco:{nombre:"Foco",material:"Residuo especial",bote:"⚫ Contenedor especial",emoji:"💡",consejo:"No lo coloques en un bote común; llévalo a un punto de manejo de residuos especiales."},
-  destornillador:{nombre:"Destornillador",material:"Metal",bote:"🟡 Bote amarillo",emoji:"🔧",consejo:"Si es metálico, puede clasificarse como metal."},
-  cable:{nombre:"Cable",material:"Electrónico",bote:"⚫ Contenedor especial",emoji:"🔌",consejo:"Llévalo a un punto de recolección de electrónicos."},
-  desconocido:{nombre:"No reconocido",material:"Revisar",bote:"⚪ Revisar",emoji:"❓",consejo:"Prueba con buena iluminación y coloca el objeto completo frente a la cámara."}
+// =====================================================
+// CONFIGURACIÓN DEL MODELO
+// =====================================================
+
+const URL = "https://teachablemachine.withgoogle.com/models/HamQ6chDb/";
+
+let modelo;
+let webcam;
+let camaraActiva = false;
+let camaraTrasera = true;
+let historial = JSON.parse(
+    localStorage.getItem("ecoclass_historial") || "[]"
+);
+
+
+// =====================================================
+// CARGAR MODELO
+// =====================================================
+
+async function cargarModelo() {
+
+    if (modelo) return;
+
+    document.getElementById("estado").innerHTML =
+        "🧠 Cargando modelo...";
+
+    try {
+
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        modelo = await tmImage.load(
+            modelURL,
+            metadataURL
+        );
+
+        document.getElementById("estado").innerHTML =
+            "✅ Modelo listo. Puedes usar la cámara.";
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("estado").innerHTML =
+            "❌ No se pudo cargar el modelo. Revisa el enlace de Teachable Machine.";
+
+    }
+}
+
+
+// =====================================================
+// INICIAR CÁMARA
+// =====================================================
+
+async function iniciarCamara() {
+
+    await cargarModelo();
+
+    if (!modelo) return;
+
+    detenerCamara();
+
+    try {
+
+        webcam = new tmImage.Webcam(
+            400,
+            400,
+            false
+        );
+
+        await webcam.setup({
+            facingMode: camaraTrasera
+                ? "environment"
+                : "user"
+        });
+
+        await webcam.play();
+
+        camaraActiva = true;
+
+        document.getElementById(
+            "webcam-container"
+        ).innerHTML = "";
+
+        document.getElementById(
+            "webcam-container"
+        ).appendChild(webcam.canvas);
+
+        document.getElementById(
+            "foto-container"
+        ).innerHTML = "";
+
+        document.getElementById("estado").innerHTML =
+            camaraTrasera
+                ? "📷 Cámara trasera activa"
+                : "🤳 Cámara frontal activa";
+
+        actualizarCamara();
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("estado").innerHTML =
+            "❌ No se pudo abrir la cámara. Permite el acceso a la cámara.";
+
+    }
+}
+
+
+// =====================================================
+// ACTUALIZAR CÁMARA Y RECONOCER
+// =====================================================
+
+async function actualizarCamara() {
+
+    if (!camaraActiva) return;
+
+    webcam.update();
+
+    await predecir(webcam.canvas);
+
+    requestAnimationFrame(actualizarCamara);
+}
+
+
+// =====================================================
+// CAMBIAR CÁMARA
+// =====================================================
+
+async function cambiarCamara() {
+
+    camaraTrasera = !camaraTrasera;
+
+    await iniciarCamara();
+}
+
+
+// =====================================================
+// DETENER CÁMARA
+// =====================================================
+
+function detenerCamara() {
+
+    camaraActiva = false;
+
+    if (webcam) {
+
+        try {
+            webcam.stop();
+        } catch (e) {}
+
+        webcam = null;
+    }
+
+    document.getElementById(
+        "webcam-container"
+    ).innerHTML = "";
+
+    document.getElementById("estado").innerHTML =
+        "⏹️ Cámara apagada";
+}
+
+
+// =====================================================
+// ANALIZAR FOTO SUBIDA
+// =====================================================
+
+async function analizarFoto(event) {
+
+    await cargarModelo();
+
+    if (!modelo) return;
+
+    const archivo = event.target.files[0];
+
+    if (!archivo) return;
+
+    const imagen = new Image();
+
+    imagen.onload = async function() {
+
+        document.getElementById(
+            "foto-container"
+        ).innerHTML = "";
+
+        imagen.style.maxWidth = "400px";
+        imagen.style.width = "100%";
+        imagen.style.borderRadius = "18px";
+        imagen.style.border = "4px solid #2e7d32";
+
+        document.getElementById(
+            "foto-container"
+        ).appendChild(imagen);
+
+        document.getElementById("estado").innerHTML =
+            "🧠 Analizando foto...";
+
+        await predecir(imagen);
+
+        document.getElementById("estado").innerHTML =
+            "✅ Foto analizada";
+
+    };
+
+    imagen.src = URL.createObjectURL(archivo);
+}
+
+
+// =====================================================
+// PREDICCIÓN
+// =====================================================
+
+async function predecir(imagen) {
+
+    try {
+
+        const predicciones =
+            await modelo.predict(imagen);
+
+        let mejor = predicciones[0];
+
+        for (let i = 1; i < predicciones.length; i++) {
+
+            if (
+                predicciones[i].probability >
+                mejor.probability
+            ) {
+
+                mejor = predicciones[i];
+
+            }
+        }
+
+        mostrarResultado(
+            mejor.className,
+            mejor.probability
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+// =====================================================
+// MOSTRAR RESULTADO
+// =====================================================
+
+function mostrarResultado(nombre, confianza) {
+
+    const info = obtenerInformacion(nombre);
+
+    document.getElementById(
+        "resultado"
+    ).classList.remove("oculto");
+
+    document.getElementById(
+        "nombreResultado"
+    ).innerHTML =
+        "♻️ " + info.nombre;
+
+    document.getElementById(
+        "categoriaResultado"
+    ).innerHTML =
+        "<b>Categoría:</b> " + info.categoria;
+
+    document.getElementById(
+        "boteResultado"
+    ).innerHTML =
+        info.bote;
+
+    const porcentaje =
+        Math.round(confianza * 100);
+
+    document.getElementById(
+        "porcentaje"
+    ).innerHTML =
+        porcentaje + "%";
+
+    document.getElementById(
+        "barraInterior"
+    ).style.width =
+        porcentaje + "%";
+
+    guardarHistorial(
+        info.nombre +
+        " → " +
+        info.categoria
+    );
+}
+
+
+// =====================================================
+// INFORMACIÓN DE LAS CLASES
+// =====================================================
+
+function obtenerInformacion(clase) {
+
+    const texto = clase
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    if (
+        texto.includes("plast")
+    ) {
+
+        return {
+            nombre: clase,
+            categoria: "Plástico",
+            bote: "🟡 Bote amarillo"
+        };
+
+    }
+
+    if (
+        texto.includes("organ")
+    ) {
+
+        return {
+            nombre: clase,
+            categoria: "Orgánicos",
+            bote: "🟢 Bote verde"
+        };
+
+    }
+
+    if (
+        texto.includes("papel") ||
+        texto.includes("carton")
+    ) {
+
+        return {
+            nombre: clase,
+            categoria: "Papel y cartón",
+            bote: "🔵 Bote azul"
+        };
+
+    }
+
+    if (
+        texto.includes("vidrio")
+    ) {
+
+        return {
+            nombre: clase,
+            categoria: "Vidrio",
+            bote: "🟢 Bote verde"
+        };
+
+    }
+
+    if (
+        texto.includes("metal")
+    ) {
+
+        return {
+            nombre: clase,
+            categoria: "Metales",
+            bote: "🟡 Bote amarillo"
+        };
+
+    }
+
+    if (
+        texto.includes("elect")
+    ) {
+
+        return {
+            nombre: clase,
+            categoria: "Electrónicos",
+            bote: "🔌 Punto de recolección electrónica"
+        };
+
+    }
+
+    if (
+        texto.includes("especial")
+    ) {
+
+        return {
+            nombre: clase,
+            categoria: "Especiales",
+            bote: "🔋 Punto de recolección especial"
+        };
+
+    }
+
+    if (
+        texto.includes("no recicl") ||
+        texto.includes("norecicl")
+    ) {
+
+        return {
+            nombre: clase,
+            categoria: "No reciclables",
+            bote: "🚫 Bote de no reciclables"
+        };
+
+    }
+
+    return {
+        nombre: clase,
+        categoria: clase,
+        bote: "🗑️ Verificar el recipiente correspondiente"
+    };
+}
+
+
+// =====================================================
+// BUSCADOR DE TEXTO
+// =====================================================
+
+const residuos = {
+
+    "manzana": {
+        categoria: "Orgánicos",
+        bote: "🟢 Bote verde"
+    },
+
+    "banana": {
+        categoria: "Orgánicos",
+        bote: "🟢 Bote verde"
+    },
+
+    "platano": {
+        categoria: "Orgánicos",
+        bote: "🟢 Bote verde"
+    },
+
+    "pizza": {
+        categoria: "Orgánicos",
+        bote: "🟢 Bote verde"
+    },
+
+    "comida": {
+        categoria: "Orgánicos",
+        bote: "🟢 Bote verde"
+    },
+
+    "hojas": {
+        categoria: "Orgánicos",
+        bote: "🟢 Bote verde"
+    },
+
+    "botella plastica": {
+        categoria: "Plástico",
+        bote: "🟡 Bote amarillo"
+    },
+
+    "botella de plastico": {
+        categoria: "Plástico",
+        bote: "🟡 Bote amarillo"
+    },
+
+    "bolsa": {
+        categoria: "Plástico",
+        bote: "🟡 Bote amarillo"
+    },
+
+    "lata": {
+        categoria: "Metales",
+        bote: "🟡 Bote amarillo"
+    },
+
+    "aluminio": {
+        categoria: "Metales",
+        bote: "🟡 Bote amarillo"
+    },
+
+    "papel": {
+        categoria: "Papel y cartón",
+        bote: "🔵 Bote azul"
+    },
+
+    "cuaderno": {
+        categoria: "Papel y cartón",
+        bote: "🔵 Bote azul"
+    },
+
+    "carton": {
+        categoria: "Papel y cartón",
+        bote: "🔵 Bote azul"
+    },
+
+    "caja": {
+        categoria: "Papel y cartón",
+        bote: "🔵 Bote azul"
+    },
+
+    "botella de vidrio": {
+        categoria: "Vidrio",
+        bote: "🟢 Bote verde"
+    },
+
+    "frasco": {
+        categoria: "Vidrio",
+        bote: "🟢 Bote verde"
+    },
+
+    "cargador": {
+        categoria: "Electrónicos",
+        bote: "🔌 Punto de recolección electrónica"
+    },
+
+    "cable": {
+        categoria: "Electrónicos",
+        bote: "🔌 Punto de recolección electrónica"
+    },
+
+    "celular": {
+        categoria: "Electrónicos",
+        bote: "🔌 Punto de recolección electrónica"
+    },
+
+    "mouse": {
+        categoria: "Electrónicos",
+        bote: "🔌 Punto de recolección electrónica"
+    },
+
+    "teclado": {
+        categoria: "Electrónicos",
+        bote: "🔌 Punto de recolección electrónica"
+    },
+
+    "pila": {
+        categoria: "Especiales",
+        bote: "🔋 Punto de recolección especial"
+    },
+
+    "bateria": {
+        categoria: "Especiales",
+        bote: "🔋 Punto de recolección especial"
+    },
+
+    "foco": {
+        categoria: "Especiales",
+        bote: "💡 Punto de recolección especial"
+    },
+
+    "bombilla": {
+        categoria: "Especiales",
+        bote: "💡 Punto de recolección especial"
+    },
+
+    "pañal": {
+        categoria: "No reciclables",
+        bote: "🚫 Bote de no reciclables"
+    },
+
+    "papel higienico": {
+        categoria: "No reciclables",
+        bote: "🚫 Bote de no reciclables"
+    },
+
+    "servilleta usada": {
+        categoria: "No reciclables",
+        bote: "🚫 Bote de no reciclables"
+    },
+
+    "residuo contaminado": {
+        categoria: "No reciclables",
+        bote: "🚫 Bote de no reciclables"
+    },
+
+    "destornillador": {
+        categoria: "Metales",
+        bote: "🟡 Bote amarillo"
+    }
 };
-function norm(t){return String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[_-]/g," ").replace(/\s+/g," ").trim()}
-function obtenerResiduo(nombre){
-  const t=norm(nombre);
-  if(!t)return catalog.desconocido;
-  const alias=[
-    [["plastico","botella plastica","envase plastico","botella","envase"],catalog.plastico],
-    [["papel","hoja","periodico","cuaderno"],catalog.papel],
-    [["carton","caja"],catalog.carton],
-    [["metal","lata","aluminio","tornillo"],catalog.metal],
-    [["vidrio","botella de vidrio","frasco"],catalog.vidrio],
-    [["organico","comida","fruta","banana","platano","cascara","restos"],catalog.organico],
-    [["electronico","electronica","celular","telefono","computadora","computador"],catalog.electronico],
-    [["foco","bombilla","lampara"],catalog.foco],
-    [["destornillador"],catalog.destornillador],
-    [["cable","cargador"],catalog.cable]
-  ];
-  for(const [keys,info] of alias){for(const k of keys){if(t===k||t.includes(k)||k.includes(t))return info;}}
-  return catalog.desconocido;
-}
-function mostrarResultado(nombre,confianza=null){
-  const info=obtenerResiduo(nombre); document.getElementById("resultEmoji").textContent=info.emoji; document.getElementById("resultName").textContent=info.nombre; document.getElementById("resultMaterial").textContent=info.material; document.getElementById("resultBin").textContent=info.bote; document.getElementById("resultAdvice").textContent=info.consejo;
-  if(confianza!==null){const p=Math.max(0,Math.min(100,Math.round(confianza*100)));document.getElementById("resultConfidence").textContent=p+"%";document.getElementById("confidenceBar").style.width=p+"%";}
-}
-async function iniciarCamara(){
-  try{
-    if(location.protocol!=="https:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){alert("Para usar la cámara en el celular, abre la página desde un enlace HTTPS.");return;}
-    document.getElementById("status").textContent="⏳ Cargando modelo...";
-    model=await tmImage.load(MODEL_URL+"model.json",MODEL_URL+"metadata.json");
-    maxPredictions=model.getTotalClasses();
-    document.getElementById("status").textContent="📷 Solicitando permiso para usar la cámara...";
-    webcam=new tmImage.Webcam(400,400,true); await webcam.setup(); await webcam.play(); cameraRunning=true;
-    const box=document.getElementById("webcam-container"); box.innerHTML=""; box.appendChild(webcam.canvas); document.getElementById("status").textContent="🟢 Cámara activa"; requestAnimationFrame(loop);
-  }catch(e){console.error(e);cameraRunning=false;document.getElementById("status").textContent="❌ No se pudo iniciar la cámara";alert("No se pudo iniciar la cámara. Revisa el permiso del navegador y que el modelo esté publicado.");}
-}
-async function loop(){if(!cameraRunning||!webcam)return;webcam.update();await predecir();requestAnimationFrame(loop)}
-async function predecir(){
-  const prediction=await model.predict(webcam.canvas); let best=prediction[0];
-  for(let i=1;i<prediction.length;i++){if(prediction[i].probability>best.probability)best=prediction[i];}
-  mostrarResultado(best.className,best.probability);
-  const now=Date.now(); if(best.probability>=0.70&&(best.className!==lastPrediction||now-lastPredictionTime>5000)){agregarHistorial(best.className,best.probability);lastPrediction=best.className;lastPredictionTime=now;}
-}
-function detenerCamara(){cameraRunning=false;if(webcam){try{webcam.stop()}catch(e){}}webcam=null;document.getElementById("webcam-container").innerHTML="";document.getElementById("status").textContent="⛔ Cámara apagada"}
-function obtenerHistorial(){try{return JSON.parse(localStorage.getItem("ecoClasificadorHistorial")||"[]")}catch(e){return[]}}
-function guardarHistorial(h){localStorage.setItem("ecoClasificadorHistorial",JSON.stringify(h))}
-function agregarHistorial(nombre,confianza){
-  const h=obtenerHistorial(),info=obtenerResiduo(nombre);h.unshift({nombre:info.nombre,material:info.material,bote:info.bote,emoji:info.emoji,confianza:Math.round(confianza*100),fecha:new Date().toLocaleString("es-GT")});if(h.length>50)h.splice(50);guardarHistorial(h);actualizarHistorial();actualizarEstadisticas();
-}
-function actualizarHistorial(){const h=obtenerHistorial(),box=document.getElementById("history");if(!h.length){box.innerHTML="<p>Todavía no hay clasificaciones.</p>";return}box.innerHTML="";h.forEach(x=>{const d=document.createElement("div");d.className="history-item";d.innerHTML=`<div class="history-emoji">${x.emoji}</div><div class="history-info"><strong>${escapeHtml(x.nombre)}</strong><small>${escapeHtml(x.material)} • ${escapeHtml(x.bote)}<br>${escapeHtml(x.fecha)} • ${x.confianza}%</small></div>`;box.appendChild(d)})}
-function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
-function borrarHistorial(){if(confirm("¿Seguro que quieres borrar todo el historial?")){localStorage.removeItem("ecoClasificadorHistorial");actualizarHistorial();actualizarEstadisticas()}}
-function actualizarEstadisticas(){const h=obtenerHistorial();document.getElementById("totalCount").textContent=h.length;document.getElementById("plasticCount").textContent=h.filter(x=>norm(x.material).includes("plastico")).length;document.getElementById("organicCount").textContent=h.filter(x=>norm(x.material).includes("organico")).length}
-function ponerEjemplo(texto){const input=document.getElementById("searchInput");input.value=texto;buscarObjeto()}
 
-function buscarObjeto(){const input=document.getElementById("searchInput"),t=input.value.trim();if(!t){alert("Escribe el nombre de un objeto.");return}const info=obtenerResiduo(t);document.getElementById("searchResult").innerHTML=`<div class="result" style="margin-top:15px"><div class="emoji">${info.emoji}</div><h2>${escapeHtml(info.nombre)}</h2><p><strong>Material:</strong> ${escapeHtml(info.material)}</p><p><strong>Contenedor:</strong> ${escapeHtml(info.bote)}</p><p>${escapeHtml(info.consejo)}</p></div>`;agregarHistorial(info.nombre,1)}
-actualizarHistorial();actualizarEstadisticas();
-window.addEventListener("beforeunload",()=>{if(webcam){try{webcam.stop()}catch(e){}}});
+
+// =====================================================
+// BUSCAR
+// =====================================================
+
+function buscarResiduo() {
+
+    const entrada =
+        document.getElementById(
+            "buscador"
+        ).value
+        .toLowerCase()
+        .trim();
+
+    if (!entrada) {
+
+        document.getElementById(
+            "resultadoBusqueda"
+        ).innerHTML =
+            "⚠️ Escribe un residuo para buscar.";
+
+        return;
+    }
+
+    let encontrado = null;
+
+    for (const clave in residuos) {
+
+        if (
+            entrada.includes(clave) ||
+            clave.includes(entrada)
+        ) {
+
+            encontrado = residuos[clave];
+            break;
+
+        }
+
+    }
+
+    if (encontrado) {
+
+        document.getElementById(
+            "resultadoBusqueda"
+        ).innerHTML = `
+            <h3>♻️ Resultado</h3>
+            <p><b>Residuo:</b> ${entrada}</p>
+            <p><b>Categoría:</b> ${encontrado.categoria}</p>
+            <p style="font-size:21px;">
+                <b>${encontrado.bote}</b>
+            </p>
+        `;
+
+        guardarHistorial(
+            entrada +
+            " → " +
+            encontrado.categoria
+        );
+
+    } else {
+
+        document.getElementById(
+            "resultadoBusqueda"
+        ).innerHTML =
+            "❓ No encontramos ese residuo. Prueba con otro nombre.";
+
+    }
+}
+
+
+// =====================================================
+// HISTORIAL
+// =====================================================
+
+function guardarHistorial(texto) {
+
+    if (
+        historial.length > 0 &&
+        historial[0] === texto
+    ) {
+
+        return;
+
+    }
+
+    historial.unshift(texto);
+
+    if (historial.length > 50) {
+
+        historial.pop();
+
+    }
+
+    localStorage.setItem(
+        "ecoclass_historial",
+        JSON.stringify(historial)
+    );
+
+    mostrarHistorial();
+}
+
+
+function mostrarHistorial() {
+
+    const lista =
+        document.getElementById(
+            "historial"
+        );
+
+    lista.innerHTML = "";
+
+    if (historial.length === 0) {
+
+        lista.innerHTML =
+            "<li>Aún no hay búsquedas.</li>";
+
+        return;
+    }
+
+    historial.forEach(item => {
+
+        const li =
+            document.createElement("li");
+
+        li.textContent = item;
+
+        lista.appendChild(li);
+
+    });
+}
+
+
+function borrarHistorial() {
+
+    historial = [];
+
+    localStorage.removeItem(
+        "ecoclass_historial"
+    );
+
+    mostrarHistorial();
+}
+
+
+// =====================================================
+// INICIAR
+// =====================================================
+
+mostrarHistorial();
+
 </script>
+
 </body>
 </html>
